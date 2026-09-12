@@ -1,8 +1,8 @@
 import { neon } from '@neondatabase/serverless';
 
 export const sql = ((strings: TemplateStringsArray, ...values: unknown[]) => {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) throw new Error('DATABASE_URL is missing. Connect Neon in Vercel Marketplace.');
+  const connectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
+  if (!connectionString) throw new Error('NEON_DATABASE_URL is missing. Connect Neon in Vercel Marketplace.');
   return neon(connectionString)(strings, ...values);
 }) as any;
 
