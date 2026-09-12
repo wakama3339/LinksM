@@ -7,8 +7,9 @@ export async function POST(request: NextRequest) {
   const denied = await requireAuth(); if (denied) return denied; await initializeDb();
   const { name, url, group } = await request.json();
   if (![name, url].every((x) => typeof x === 'string' && x.trim())) return NextResponse.json({ error: 'Name and link are required' }, { status: 400 });
-  try { new URL(url); } catch { return NextResponse.json({ error: 'Enter a valid link' }, { status: 400 }); }
-  await sql`INSERT INTO links (name, url, group_name) VALUES (${name.trim()}, ${url.trim()}, ${typeof group === 'string' ? group.trim() : ''})`;
+  const normalizedUrl = /^https?:\/\//i.test(url.trim()) ? url.trim() : `https://${url.trim()}`;
+  try { new URL(normalizedUrl); } catch { return NextResponse.json({ error: 'Enter a valid link' }, { status: 400 }); }
+  await sql`INSERT INTO links (name, url, group_name) VALUES (${name.trim()}, ${normalizedUrl}, ${typeof group === 'string' ? group.trim() : ''})`;
   return NextResponse.json({ ok: true }, { status: 201 });
 }
 export async function DELETE(request: NextRequest) { const denied = await requireAuth(); if (denied) return denied; await initializeDb(); const { id } = await request.json(); await sql`DELETE FROM links WHERE id = ${id}`; return NextResponse.json({ ok: true }); }
