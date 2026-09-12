@@ -9,10 +9,12 @@ export const sql = ((strings: TemplateStringsArray, ...values: unknown[]) => {
 let initialized: Promise<void> | undefined;
 export function initializeDb() {
   if (!initialized) initialized = (async () => {
-    await sql`CREATE TABLE IF NOT EXISTS app_settings (id SMALLINT PRIMARY KEY, password_hash TEXT NOT NULL, theme TEXT NOT NULL DEFAULT 'white')`;
+    await sql`CREATE TABLE IF NOT EXISTS app_settings (id SMALLINT PRIMARY KEY, password_hash TEXT NOT NULL, theme TEXT NOT NULL DEFAULT 'white', groups_collapsed BOOLEAN NOT NULL DEFAULT FALSE)`;
+    await sql`ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS groups_collapsed BOOLEAN NOT NULL DEFAULT FALSE`;
     await sql`CREATE TABLE IF NOT EXISTS links (id BIGSERIAL PRIMARY KEY, name TEXT NOT NULL, url TEXT NOT NULL, group_name TEXT NOT NULL DEFAULT '', created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`;
+    await sql`CREATE TABLE IF NOT EXISTS link_groups (id BIGSERIAL PRIMARY KEY, name TEXT NOT NULL UNIQUE, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`;
     const rows = await sql`SELECT id FROM app_settings WHERE id = 1`;
-    if (!rows.length) await sql`INSERT INTO app_settings (id, password_hash, theme) VALUES (1, ${hashPassword('admin')}, 'white')`;
+    if (!rows.length) await sql`INSERT INTO app_settings (id, password_hash, theme, groups_collapsed) VALUES (1, ${hashPassword('admin')}, 'white', FALSE)`;
   })();
   return initialized;
 }
